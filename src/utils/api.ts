@@ -17,8 +17,8 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
       'https://piped-api.privacy.com.de'
     ];
 
-    // Helper to wrap URL with CORS proxy
-    const getCorsUrl = (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    // Helper to wrap URL with CORS proxy (allorigins is free, open source, and has no host restrictions)
+    const getCorsUrl = (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
     let data = null;
 
