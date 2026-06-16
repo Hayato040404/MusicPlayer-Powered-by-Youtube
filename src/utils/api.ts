@@ -1,3 +1,28 @@
+// Helper to fetch resource trying multiple CORS proxies sequentially
+const fetchWithProxy = async (targetUrl: string): Promise<Response> => {
+  const proxies = [
+    (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`
+  ];
+
+  let lastError = null;
+  for (const proxy of proxies) {
+    try {
+      const proxiedUrl = proxy(targetUrl);
+      const response = await fetch(proxiedUrl);
+      if (response.ok) {
+        return response;
+      }
+      throw new Error(`Proxy returned status ${response.status}`);
+    } catch (err: any) {
+      console.warn(`Proxy failed for ${targetUrl} using proxy URL:`, err.message);
+      lastError = err;
+    }
+  }
+  throw lastError || new Error(`Failed to fetch ${targetUrl} via all available proxies`);
+};
+
 export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
   try {
     // Extract video ID from URL
@@ -17,20 +42,12 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
       'https://piped-api.privacy.com.de'
     ];
 
-    // Helper to wrap URL with CORS proxy (allorigins is free, open source, and has no host restrictions)
-    const getCorsUrl = (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-
     let data = null;
 
     // Try multiple instances since public instances often go down (502/Rate limited)
     for (const instance of PIPED_INSTANCES) {
       try {
-        // Wrap the API request with CORS proxy to bypass API host CORS restrictions
-        const targetUrl = getCorsUrl(`${instance}/streams/${videoId}`);
-        const response = await fetch(targetUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP Error ${response.status}`);
-        }
+        const response = await fetchWithProxy(`${instance}/streams/${videoId}`);
         data = await response.json();
         if (data && data.audioStreams && data.audioStreams.length > 0) {
           break; // Successfully got data
@@ -52,10 +69,7 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
     const audioUrl = audioStream.url;
 
     // Fetch the actual audio Blob to save offline via CORS proxy since googlevideo.com strictly blocks CORS
-    const audioResponse = await fetch(getCorsUrl(audioUrl));
-    if (!audioResponse.ok) {
-      throw new Error('Failed to download audio file');
-    }
+    const audioResponse = await fetchWithProxy(audioUrl);
     const audioBlob = await audioResponse.blob();
 
     return {
