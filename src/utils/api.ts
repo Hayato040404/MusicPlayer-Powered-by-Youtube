@@ -17,7 +17,6 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
     ];
 
     let data = null;
-    let lastError = null;
 
     // Try multiple instances since public instances often go down (502/Rate limited)
     for (const instance of PIPED_INSTANCES) {
@@ -32,7 +31,6 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
         }
       } catch (err: any) {
         console.warn(`Instance ${instance} failed:`, err.message);
-        lastError = err;
         data = null; // Reset data to try next
       }
     }
