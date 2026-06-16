@@ -1,4 +1,3 @@
-import React from 'react';
 import { PlayerProvider } from './context/PlayerContext';
 import { NowPlaying } from './components/NowPlaying';
 import { PlayerControls } from './components/PlayerControls';
