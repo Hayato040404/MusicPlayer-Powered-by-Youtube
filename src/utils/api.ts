@@ -8,18 +8,37 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
       throw new Error('Invalid YouTube URL');
     }
 
-    // Use Piped API which supports CORS and simple GET requests
-    // Using a reliable public instance
-    const response = await fetch(`https://pipedapi.kavin.rocks/streams/${videoId}`);
+    const PIPED_INSTANCES = [
+      'https://pipedapi.kavin.rocks',
+      'https://api.piped.projectsegfau.lt',
+      'https://pipedapi.moomoo.me',
+      'https://pipedapi.syncpundit.io',
+      'https://piped-api.garudalinux.org'
+    ];
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch from Piped API (Rate limited or down)');
+    let data = null;
+    let lastError = null;
+
+    // Try multiple instances since public instances often go down (502/Rate limited)
+    for (const instance of PIPED_INSTANCES) {
+      try {
+        const response = await fetch(`${instance}/streams/${videoId}`);
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+        data = await response.json();
+        if (data && data.audioStreams && data.audioStreams.length > 0) {
+          break; // Successfully got data
+        }
+      } catch (err: any) {
+        console.warn(`Instance ${instance} failed:`, err.message);
+        lastError = err;
+        data = null; // Reset data to try next
+      }
     }
 
-    const data = await response.json();
-    
-    if (!data.audioStreams || data.audioStreams.length === 0) {
-      throw new Error('No audio streams found for this video');
+    if (!data) {
+      throw new Error('すべての抽出サーバーが現在混雑しているかダウンしています。時間を置いて再度お試しください。');
     }
 
     // Find best audio stream (prefer m4a/mp4 or webm)
