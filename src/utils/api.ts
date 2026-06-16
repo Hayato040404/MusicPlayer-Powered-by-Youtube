@@ -9,11 +9,12 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
     }
 
     const PIPED_INSTANCES = [
-      'https://api.piped.projectsegfau.lt',
-      'https://pipedapi.kavin.rocks',
-      'https://pipedapi.moomoo.me',
-      'https://pipedapi.syncpundit.io',
-      'https://piped-api.garudalinux.org'
+      'https://api.piped.yt',
+      'https://pipedapi.adminforge.de',
+      'https://pipedapi.leptons.xyz',
+      'https://pipedapi.nosebs.ru',
+      'https://pipedapi.owo.si',
+      'https://piped-api.privacy.com.de'
     ];
 
     // Helper to wrap URL with CORS proxy
