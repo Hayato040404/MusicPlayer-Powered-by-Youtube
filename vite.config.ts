@@ -32,5 +32,5 @@ export default defineConfig({
       }
     })
   ],
-  base: '/MusicPlayer-Powered-by-Youtube/'
+  base: './'
 });
