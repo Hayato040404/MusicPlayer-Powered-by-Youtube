@@ -9,19 +9,24 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
     }
 
     const PIPED_INSTANCES = [
-      'https://pipedapi.kavin.rocks',
       'https://api.piped.projectsegfau.lt',
+      'https://pipedapi.kavin.rocks',
       'https://pipedapi.moomoo.me',
       'https://pipedapi.syncpundit.io',
       'https://piped-api.garudalinux.org'
     ];
+
+    // Helper to wrap URL with CORS proxy
+    const getCorsUrl = (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`;
 
     let data = null;
 
     // Try multiple instances since public instances often go down (502/Rate limited)
     for (const instance of PIPED_INSTANCES) {
       try {
-        const response = await fetch(`${instance}/streams/${videoId}`);
+        // Wrap the API request with CORS proxy to bypass API host CORS restrictions
+        const targetUrl = getCorsUrl(`${instance}/streams/${videoId}`);
+        const response = await fetch(targetUrl);
         if (!response.ok) {
           throw new Error(`HTTP Error ${response.status}`);
         }
@@ -45,8 +50,8 @@ export const fetchTrackInfoAndAudio = async (youtubeUrl: string) => {
 
     const audioUrl = audioStream.url;
 
-    // Fetch the actual audio Blob to save offline
-    const audioResponse = await fetch(audioUrl);
+    // Fetch the actual audio Blob to save offline via CORS proxy since googlevideo.com strictly blocks CORS
+    const audioResponse = await fetch(getCorsUrl(audioUrl));
     if (!audioResponse.ok) {
       throw new Error('Failed to download audio file');
     }
